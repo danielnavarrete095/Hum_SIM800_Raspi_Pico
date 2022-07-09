@@ -24,12 +24,18 @@ add_compile_options(-Wall
         -Wno-maybe-uninitialized
         )
 
-add_executable(hello_uart
-        hello_uart.c
+set(FAMILY rp2040)
+set(BOARD pico_sdk)
+add_executable(hello_uart)
+# Example source
+target_sources(hello_uart PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/hello_uart.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/Serial.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/sim800/SIM800.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/sim800/string_helper.cpp
         )
-
 # pull in common dependencies
-target_link_libraries(hello_uart pico_stdlib)
+target_link_libraries(hello_uart PUBLIC pico_stdlib)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(hello_uart)
