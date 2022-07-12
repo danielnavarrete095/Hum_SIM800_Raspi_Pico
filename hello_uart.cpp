@@ -30,34 +30,49 @@ int main() {
     DebugSerial.println("Init");
 
     while(1) {
-        bool simErr = false;
-        // sim.wakeUp();
-        char imei[16];
-        memset(imei, '\0', 16);
-        // debug("Getting imei!");
-        simErr = sim.getIMEI(imei, 1000);
-        if (simErr) {
-            debug("Sim unresponsive!");
-        #ifdef RESET_IF_NO_RESPONSE
-            sim.reset();
-        #ifdef DEBUG
-            Serial.flush();
-        #endif
-            resetFunc();
-        #endif
-        } else {
-          debug("imei", imei);
-          // Once you have the IMEI, copy it to the buffer
-          strncpy(buffer, imei, 15);
-          buffer[15] = '|';
-          if (sim.UDP_Connect(ipAddress, port)) {
-            debug("Connected succesfully");
-            if (sim.UDP_Send(buffer)) {
-              debug("Sent succesfully");
-            }
+      while(!DebugSerial.available()) {
+        tight_loop_contents();
+      }
+      char flag = 0;
+      char c = 0;
+      while(c != '\n' || flag == 0) {
+        flag = 1;
+        while(!DebugSerial.available()) {
+          tight_loop_contents();
+        }
+        c = uart_getc(uart0);
+        strncat(buffer, &c, 1);
+        debug("Buffer", buffer);
+      }
+      bool simErr = false;
+      // sim.wakeUp();
+      char imei[16];
+      memset(imei, '\0', 16);
+      // debug("Getting imei!");
+      simErr = sim.getIMEI(imei, 1000);
+      if (simErr) {
+          debug("Sim unresponsive!");
+      #ifdef RESET_IF_NO_RESPONSE
+          sim.reset();
+      #ifdef DEBUG
+          Serial.flush();
+      #endif
+          resetFunc();
+      #endif
+      } else {
+        debug("imei", imei);
+        // Once you have the IMEI, copy it to the buffer
+        strncpy(buffer, imei, 15);
+        buffer[15] = '|';
+        if (sim.UDP_Connect(ipAddress, port)) {
+          debug("Connected succesfully");
+          if (sim.UDP_Send(buffer)) {
+            debug("Sent succesfully");
           }
         }
-        sleep_ms(5000);
+      }
+      // sleep_ms(5000);
+      memset(buffer, '\0', BUFF_SIZE);
     }
 }
 
